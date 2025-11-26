@@ -1,2 +1,4 @@
-from SingleDomainSystem import SingleDomainSystem
-from LinearInvertedPendulum import HybridLinearInvertedPendulum
+from .SingleDomainSystem import SingleDomainSystem
+from .LinearInvertedPendulum import HybridLinearInvertedPendulum
+from .CompassGaitWalker import CompassGaitWalker
+from .SpokedWheel import SpokedWheel

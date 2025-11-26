@@ -4,7 +4,7 @@ from numpy.typing import ArrayLike
 from matplotlib.collections import Collection
 
 # This class represents a hybrid system with a single domain
-# The system evolves according to the dynamics f until it approaches the switching set (defined by the guard function crossing 0)
+# The system evolves according to the dynamics f until it approaches the switching set (defined by the guard function changing signs from - to +)
 # When the system trajectory intersects the switching surface, the system undergoes a reset
 class SingleDomainSystem(ABC):
 
