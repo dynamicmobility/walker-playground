@@ -55,7 +55,7 @@ class CompassGaitWalker(SingleDomainSystem):
                        [self.m*self.b**2, -self.m*self.b*self.l*np.cos(2*alpha)]])
         qdm = np.array([[tswd], [tstd]])
         qdp = np.linalg.inv(Qp)@Qm@qdm # Relabel velocities
-        qp = np.array([tst + 0.001, tsw])
+        qp = np.array([tst, tsw])
         return np.hstack((qp, qdp.flatten()))
 
     def guard(self, t: float, x: np.ndarray):
