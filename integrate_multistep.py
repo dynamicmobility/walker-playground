@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 type = "Compass"
 tspan = [0, 1]
-nsteps = 1
+nsteps = 4
 
 if type == "Compass":
     sys = CompassGaitWalker(m=5., mh=10., a=0.5, b=0.5, gamma=0.0525)
@@ -27,20 +27,26 @@ elif type == "HLIP":
 event = lambda t, x, *args: sys.guard(t, x)
 event.terminal = True
 event.direction = 1
-
-traj = solve_ivp(sys.f, tspan, x0, events=event, args=args, dense_output=True, max_step=0.01)
-
-ts = traj.t
-ys = traj.y
+global_offset = np.array([0.0, 0.0])
 
 fig1, ax1 = plt.subplots()
-for i in range(len(ts)):
-    ax1.add_collection(sys.draw_system(ts[i], ys[:, i]))
 
-print(sys.reset(ts[-1], ys[:, -1]))
-fig2, ax2 = plt.subplots()
+for i in range(nsteps):
+    traj = solve_ivp(sys.f, tspan, x0, events=event, args=args, dense_output=True, max_step=0.01)
+    ts = traj.t
+    ys = traj.y
+    for i in range(0, len(ts), 5):
+        ax1.add_collection(sys.draw_system(ts[i], ys[:, i], offset=global_offset))
+    xf = ys[:, -1]
+    tspan = [ts[-1], ts[-1]+10]
+    print("Step dur: ", ts[-1] - ts[0])
+    print("Final state: ", xf)
+    print("guard value: ", sys.guard(ts[-1], xf))
+    global_offset += sys.sw_foot_pos(xf)
+    x0 = sys.reset(ts[-1], xf)
+    # print(global_offset)
 
-ax2.plot(ys[0, :], ys[2, :])
-
+# fig2, ax2 = plt.subplots()
+# ax2.plot(ts, ys[0, :])
 
 plt.show()
