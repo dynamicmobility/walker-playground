@@ -1,5 +1,6 @@
 from .SingleDomainSystem import SingleDomainSystem
-import numpy as np
+import jax.numpy as np
+import jax
 from numpy.typing import ArrayLike
 from matplotlib.collections import LineCollection
 
@@ -58,9 +59,14 @@ class CompassGaitWalker(SingleDomainSystem):
         qp = np.array([tst, tsw])
         return np.hstack((qp, qdp.flatten()))
 
-    def guard(self, t: float, x: np.ndarray):
-        tsw, tst, tswd, tstd = x.ravel()
-        return (tsw + tst - 2*self.gamma)
+    def guard(self, t: float, y: np.ndarray, *args, **kwargs):
+        tsw, tst, tswd, tstd = y.ravel()
+        return np.where(tst > 0, tsw + tst - 2*self.gamma, -0.001)
+        if(tst > 0):
+            return (tsw + tst - 2*self.gamma)
+        else:
+            return -0.001
+
     
     def draw_system(self, t, x, offset=np.zeros((2,)), *args, **kwargs):
         tsw, tst, tswd, tstd = x.ravel()
