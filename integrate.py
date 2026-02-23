@@ -29,18 +29,18 @@ event = lambda t, x, *args: sys.guard(t, x)
 event.terminal = True
 event.direction = 1
 
-traj = solve_ivp(sys.f, tspan, x0, events=event, args=args, dense_output=True, max_step=0.01)
+traj = solve_ivp(sys.f, tspan, x0, events=event, args=args, dense_output=True, max_step=0.001)
 
 ts = traj.t
 ys = traj.y
 
 fig1, ax1 = plt.subplots()
-for i in range(len(ts)):
+for i in range(0, len(ts), 10):
     ax1.add_collection(sys.draw_system(ts[i], ys[:, i]))
 
 print("tf: ", ts[-1])
-print("xf: ", ys[:, -1])
-print("x0: ", sys.reset(ts[-1], ys[:, -1]))
+print("xf: ", repr(ys[:, -1]))
+print("x0: ", repr(sys.reset(ts[-1], ys[:, -1])))
 print("x0_nom: ", x0)
 fig2, ax2 = plt.subplots()
 

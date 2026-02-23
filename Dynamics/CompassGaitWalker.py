@@ -1,5 +1,5 @@
 from .SingleDomainSystem import SingleDomainSystem
-import jax.numpy as np
+import numpy as np
 import jax
 from numpy.typing import ArrayLike
 from matplotlib.collections import LineCollection
