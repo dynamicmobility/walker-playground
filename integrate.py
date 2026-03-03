@@ -1,6 +1,7 @@
 import numpy as np
 from Dynamics import HybridLinearInvertedPendulum, CompassGaitWalker, SpokedWheel
-from scipy.integrate import solve_ivp
+# from scipy.integrate import solve_ivp
+from Integrator.euler_integrate import solve_ivp
 import matplotlib.pyplot as plt
 
 type = "Compass"
