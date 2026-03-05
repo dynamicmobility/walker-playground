@@ -1,19 +1,45 @@
 import numpy as np
 from Dynamics import HybridLinearInvertedPendulum, CompassGaitWalker, SpokedWheel
-# from scipy.integrate import solve_ivp
-from Integrator.euler_integrate import solve_ivp
+from diffrax import diffeqsolve, ODETerm, Tsit5, Dopri5, Euler, ConstantStepSize, Event, SaveAt
+import optimistix as optx
+
 import matplotlib.pyplot as plt
 
 plot = True
 
 type = "Compass"
+method = "Custom Euler" # or "Scipy" or "Custom Euler" or "Custom RK45"
+
+if method == "Diffrax":
+    from sklearn.utils import Bunch
+    def solve_ivp(f, tspan, x0, events, args, dense_output=True, max_step=0.0007344708615453861):
+        term = ODETerm(f)
+        solver=Euler()
+
+        cond_fn = lambda t, y, *args, **kwargs: events(t, y)
+        root_finder = optx.Newton(1e-5, 1e-5, optx.rms_norm)
+        event = Event(cond_fn, root_finder, direction=True)
+        save = SaveAt(steps=int(dense_output))
+        traj = diffeqsolve(term, solver, t0=tspan[0], t1=tspan[1], dt0=max_step, y0=x0, args=ctrl_func, event=event, saveat=save)
+        ts = traj.ts[np.isfinite(traj.ts)]
+        ys = traj.ys[np.isfinite(traj.ts)]
+        return Bunch(t=ts, y=ys.T)
+elif method == "Scipy":
+    from scipy.integrate import solve_ivp
+elif method == "Custom Euler":
+    from Integrator.euler_integrate import solve_ivp
+elif method == "Custom RK45":
+    from Integrator.rk45_integrate import solve_ivp
+
 tspan = [0, 1]
-nsteps = 30
+nsteps = 1
 
 if type == "Compass":
     sys = CompassGaitWalker(m=5., mh=10., a=0.5, b=0.5, gamma=0.0525)
     # x0 = np.array([0, 0, -2.0, 0.4])
-    x0 = np.array([ 0.3159661 , -0.22096609,  0.3819361 ,  1.0887045 ])
+    # x0 = np.array([ 0.3159661 , -0.22096609,  0.3819361 ,  1.0887045 ])
+    # x0 = np.array([ 0.32378459, -0.21877459,  0.37611822,  1.09286032])
+    x0 = np.array([ 0.32362654, -0.21862654,  0.37206262,  1.0906176 ])
     ctrl_func = lambda t, x: 0
     args = (ctrl_func, )
 
@@ -31,8 +57,9 @@ elif type == "HLIP":
 event = lambda t, x, *args: sys.guard(t, x)
 event.terminal = True
 event.direction = 1
+
 global_offset = np.array([0.0, 0.0])
-guard_offset_vec = np.array([1e-5, 0, 0, 0])
+guard_offset_vec = np.array([0, 0, 0, 0])
 
 if(plot):
     fig1, ax1 = plt.subplots()
@@ -42,7 +69,7 @@ if(plot):
 
 
 for i in range(nsteps):
-    traj = solve_ivp(sys.f, tspan, x0, events=event, args=args, dense_output=True, max_step=0.001)
+    traj = solve_ivp(sys.f, tspan, x0, events=event, args=args, dense_output=True, max_step=0.0007369402775227904)
     ts = traj.t
     ys = traj.y
     xf = ys[:, -1]
@@ -50,14 +77,14 @@ for i in range(nsteps):
     print("Step dur: ", ts[-1] - ts[0])
     print("Final state: ", repr(xf))
     global_offset += sys.sw_foot_pos(xf)
-    x0 = sys.reset(ts[-1], xf) + guard_offset_vec
+    x0 = sys.reset(ts[-1], xf)
     print("New initial state: ", repr(x0))
     if(plot):
         for j in range(0, len(ts), 20):
             ax1.add_collection(sys.draw_system(ts[j], ys[:, j], offset=global_offset))
         ax2.plot(ts, [sys.guard(ts[i], ys[:, i]) for i in range(len(ts))])
         if(type == "Compass"):
-            color_idx = float(i) / nsteps
+            color_idx = float(i) / np.max([nsteps-1, 1])
             colors = plt.cm.viridis(color_idx)
             ax3.plot(ys[0, :], ys[2, :], color=colors, label="Stance Leg" if i == 0 else "")
             ax3.plot(ys[1, :], ys[3, :], color=colors, label="Swing Leg" if i == 0 else "")
