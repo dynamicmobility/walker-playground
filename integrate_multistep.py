@@ -1,7 +1,7 @@
 import numpy as np
 from Dynamics import HybridLinearInvertedPendulum, CompassGaitWalker, SpokedWheel
-from scipy.integrate import solve_ivp
-# from Integrator.euler_integrate import solve_ivp
+# from scipy.integrate import solve_ivp
+from Integrator.euler_integrate import solve_ivp
 import matplotlib.pyplot as plt
 
 plot = True
@@ -12,8 +12,8 @@ nsteps = 30
 
 if type == "Compass":
     sys = CompassGaitWalker(m=5., mh=10., a=0.5, b=0.5, gamma=0.0525)
-    x0 = np.array([0, 0, -2.0, 0.4])
-    # x0 = np.array([ 0.3159661 , -0.22096609,  0.3819361 ,  1.0887045 ])
+    # x0 = np.array([0, 0, -2.0, 0.4])
+    x0 = np.array([ 0.3159661 , -0.22096609,  0.3819361 ,  1.0887045 ])
     ctrl_func = lambda t, x: 0
     args = (ctrl_func, )
 
@@ -53,13 +53,16 @@ for i in range(nsteps):
     x0 = sys.reset(ts[-1], xf) + guard_offset_vec
     print("New initial state: ", repr(x0))
     if(plot):
-        for i in range(0, len(ts), 20):
-            ax1.add_collection(sys.draw_system(ts[i], ys[:, i], offset=global_offset))
+        for j in range(0, len(ts), 20):
+            ax1.add_collection(sys.draw_system(ts[j], ys[:, j], offset=global_offset))
         ax2.plot(ts, [sys.guard(ts[i], ys[:, i]) for i in range(len(ts))])
         if(type == "Compass"):
-            ax3.plot(ys[0, :], ys[2, :])
-            ax3.plot(ys[1, :], ys[3, :])
-            ax3.legend(["Stance Leg", "Swing Leg"])
+            color_idx = float(i) / nsteps
+            colors = plt.cm.viridis(color_idx)
+            ax3.plot(ys[0, :], ys[2, :], color=colors, label="Stance Leg" if i == 0 else "")
+            ax3.plot(ys[1, :], ys[3, :], color=colors, label="Swing Leg" if i == 0 else "")
+            if i == 0:
+                ax3.legend()
     # print(global_offset)
 
 if(plot):
